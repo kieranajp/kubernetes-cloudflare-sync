@@ -32,7 +32,6 @@ var options = struct {
 	CloudflareTTL:      os.Getenv("CF_TTL"),
 	DNSName:            os.Getenv("DNS_NAME"),
 	UseInternalIP:      os.Getenv("USE_INTERNAL_IP") != "",
-	SkipExternalIP:     os.Getenv("SKIP_EXTERNAL_IP") != "",
 	NodeSelector:       os.Getenv("NODE_SELECTOR"),
 }
 
@@ -43,7 +42,6 @@ func main() {
 	flag.StringVar(&options.CloudflareProxy, "cloudflare-proxy", options.CloudflareProxy, "enable cloudflare proxy on dns (default false)")
 	flag.StringVar(&options.CloudflareTTL, "cloudflare-ttl", options.CloudflareTTL, "ttl for dns (default 120)")
 	flag.BoolVar(&options.UseInternalIP, "use-internal-ip", options.UseInternalIP, "use internal ips too if external ip's are not available")
-	flag.BoolVar(&options.SkipExternalIP, "skip-external-ip", options.SkipExternalIP, "don't sync external IPs (use in conjunction with --use-internal-ip)")
 	flag.StringVar(&options.NodeSelector, "node-selector", options.NodeSelector, "node selector query")
 	flag.Parse()
 
@@ -110,7 +108,7 @@ func main() {
 		}
 
 		var ips []string
-		if !options.SkipExternalIP {
+		if !options.UseInternalIP {
 			for _, node := range nodes {
 				if nodeIsReady(node) {
 					for _, addr := range node.Status.Addresses {
@@ -121,7 +119,7 @@ func main() {
 				}
 			}
 		}
-		if options.UseInternalIP && len(ips) == 0 {
+		if options.UseInternalIP {
 			for _, node := range nodes {
 				if nodeIsReady(node) {
 					for _, addr := range node.Status.Addresses {
